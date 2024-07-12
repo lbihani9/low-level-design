@@ -18,12 +18,12 @@ public class ParkingLot {
     private String id;
     private String address;
     private int capacity;
-    private static ParkingLot parkingLot;
-    private List<Entrance> entrances = new ArrayList<>();
-    private List<Exit> exits = new ArrayList<>();
-    private Map<ParkingSpot.SpotType, Map<String, ParkingSpot>> busySpots = new HashMap<>();
-    private Map<ParkingSpot.SpotType, TreeMap<String, ParkingSpot>> availableSpots = new HashMap<>();
-    private Map<String, ParkingTicket> tickets = new HashMap<>();
+    private static volatile ParkingLot parkingLot;
+    private final List<Entrance> entrances = new ArrayList<>();
+    private final List<Exit> exits = new ArrayList<>();
+    private final Map<ParkingSpot.SpotType, Map<String, ParkingSpot>> busySpots = new HashMap<>();
+    private final Map<ParkingSpot.SpotType, TreeMap<String, ParkingSpot>> availableSpots = new HashMap<>();
+    private final Map<String, ParkingTicket> tickets = new HashMap<>();
     private final Map<Vehicle.VehicleType, ParkingSpot.SpotType> vehicleToSpotCompatibility = new HashMap<>();
     private ParkingRate parkingRate;
     private DisplayScreen screen;
@@ -71,30 +71,27 @@ public class ParkingLot {
     }
 
     public ParkingTicket getTicket(Vehicle vehicle) {
-        ParkingSpot.SpotType spotType = vehicleToSpotCompatibility.get(vehicle.getType());
-        if (!hasAvailableSpots(spotType)) {
-            return null;
+        // TODO: Try reducing the critical section size.
+        synchronized (availableSpots) {
+            ParkingSpot.SpotType spotType = vehicleToSpotCompatibility.get(vehicle.getType());
+            if (!hasAvailableSpots(spotType)) {
+                System.out.println("No free spots available.");
+                return null;
+            }
+
+            Map.Entry<String, ParkingSpot> firstSpot = availableSpots.get(spotType).pollFirstEntry();
+            firstSpot.getValue().markUnavailable();
+
+            ParkingTicket ticket = new ParkingTicket(vehicle, firstSpot.getValue());
+
+            busySpots.get(spotType).put(firstSpot.getKey(), firstSpot.getValue());
+            tickets.put(ticket.getId(), ticket);
+
+            this.screen.updateFreeSpots(spotType, availableSpots.get(spotType).size());
+            this.screen.display();
+
+            return ticket;
         }
-
-        Map.Entry<String, ParkingSpot> firstSpot = availableSpots.get(spotType).pollFirstEntry();
-        ParkingTicket ticket = new ParkingTicket(vehicle, firstSpot.getValue());
-
-        busySpots.get(spotType).put(firstSpot.getKey(), firstSpot.getValue());
-        tickets.put(ticket.getId(), ticket);
-
-        this.screen.updateFreeSpots(spotType, availableSpots.get(spotType).size());
-        this.screen.display();
-
-        return ticket;
-    }
-
-    private Map<ParkingSpot.SpotType, Integer> getFreeSpotStats() {
-        Map<ParkingSpot.SpotType, Integer> freeSpotStats = new HashMap<>();
-
-        for (ParkingSpot.SpotType spotType : ParkingSpot.SpotType.values()) {
-            freeSpotStats.put(spotType, availableSpots.get(spotType).size());
-        }
-        return freeSpotStats;
     }
 
     public Boolean addEntranceGate(Entrance entrance) {
@@ -118,6 +115,7 @@ public class ParkingLot {
         if (ok) {
             ticket.markAsPaid();
             ParkingSpot spot = ticket.getAssignedSpot();
+            spot.markAvailable();
             busySpots.get(spot.getType()).remove(spot.getId());
             availableSpots.get(spot.getType()).put(spot.getId(), spot);
             tickets.remove(ticket.getId());
@@ -125,13 +123,13 @@ public class ParkingLot {
         return ok;
     }
 
-    public Boolean addParkingSpot(ParkingSpot spot) {
+    public void addParkingSpot(ParkingSpot spot) throws IllegalStateException {
         if (getTotalCreatedSpots() >= capacity) {
-            // TODO: throw exception("Reached max capacity")
-            return false;
+            throw new IllegalStateException("Reached max capacity, cannot add parking spot");
         }
+
         availableSpots.get(spot.getType()).put(spot.getId(), spot);
-        return true;
+        return;
     }
 
     public Boolean removeParkingSpot(String id) {
@@ -141,12 +139,12 @@ public class ParkingLot {
                 return true;
             }
             if (busySpots.get(spotType).containsKey(id)) {
-                // TODO: throw exception("This spot is already being used")
+                System.out.println("This spot is already being used");
                 return false;
             }
         }
 
-        // TODO: throw exception("No spot found")
+        System.out.println("No spot with id=" + id + " found.");
         return false;
     }
 

@@ -12,19 +12,22 @@ public class Admin extends Account {
         super(name, password, email);
     }
 
-    public Boolean addEntranceGate(ParkingLot parkingLot) {
+    public Entrance addEntranceGate(ParkingLot parkingLot) {
         Entrance entrance = new Entrance();
-        return parkingLot.addEntranceGate(entrance);
+        parkingLot.addEntranceGate(entrance);
+        return entrance;
     }
 
-    public Boolean addExitGate(ParkingLot parkingLot) {
+    public Exit addExitGate(ParkingLot parkingLot) {
         Exit exit = new Exit();
-        return parkingLot.addExitGate(exit);
+        parkingLot.addExitGate(exit);
+        return exit;
     }
 
-    public Boolean addParkingSpot(ParkingLot parkingLot, ParkingSpot.SpotType type) {
+    public String addParkingSpot(ParkingLot parkingLot, ParkingSpot.SpotType type) {
         ParkingSpot spot = new ParkingSpot(type);
-        return parkingLot.addParkingSpot(spot);
+        parkingLot.addParkingSpot(spot);
+        return spot.getId();
     }
 
     public Boolean removeParkingSpot(ParkingLot parkingLot, String parkingSpotId) {

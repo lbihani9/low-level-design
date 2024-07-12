@@ -20,10 +20,6 @@ public class ParkingSpot {
         this.isFree = true;
     }
 
-    public Boolean isAvailable() {
-        return isFree;
-    }
-
     public void markUnavailable() {
         isFree = false;
     }

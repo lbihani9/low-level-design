@@ -32,7 +32,7 @@ public class Payment {
         this.paymentStrategy = paymentStrategy;
     }
 
-    public Boolean processPayment() {
+    public Boolean processPayment() throws IllegalStateException {
         if (paymentStrategy == null) {
             throw new IllegalStateException("Payment strategy is not set");
         }

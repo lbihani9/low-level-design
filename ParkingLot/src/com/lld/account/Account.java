@@ -15,6 +15,10 @@ public abstract class Account {
         this.email = email;
     }
 
+    public String getId() {
+        return id;
+    }
+
     public void resetPassword(String password) {
         // Not being very secure here since it's just a demo.
         this.password = password;

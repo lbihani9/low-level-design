@@ -2,7 +2,7 @@
 
 R1: The parking lot should have the capacity to park N vehicles.
 
-R2: The four different types of parking spots are handicapped, compact, large, and motorcycle.
+R2: The three different types of parking spots are compact, large, and motorcycle.
 
 R3: The parking lot should have multiple entrance and exit points.
 
@@ -18,8 +18,15 @@ R6: The system should not allow more vehicles in the parking lot if the maximum 
 
 R7: Customers should be able to collect a parking ticket from the entrance and pay at the exit.
 
-R8: The customer can pay for the ticket either with an automated exit panel or pay the parking agent at the exit.
+R8: The customer can pay for the ticket at the automated exit panel.
 
 R9: The payment should be calculated at an hourly rate.
 
-R10: Payment can be made using either a credit/debit card, Cash or UPI.
+R10: Payment can be made using either a debit card, or UPI.
+
+## Future work
+1. **New requirement**: Add support for multiple floors.
+2. **New requirement**: Add support for closest spot assignment strategy. Current strategy is to assign the first available spot of a compatible type. 
+3. **Design improvement**: Ideally, strategy pattern should be used for assignment strategy.
+4. **Design improvement**: Implementation of Display should be ideally be done using Observer Pattern. Whenever available spots changes, display should automatically get updated.
+5. **Design improvement + New requirement**: Currently, vehicle class is implemented using just enums. There was no need for separate classes for each type because none of them needed separate special methods for their types. But, if we plan to add support for `Electric` vehicle type, we might need separate class if we also plan to add charging outlet to charge the vehicle.
