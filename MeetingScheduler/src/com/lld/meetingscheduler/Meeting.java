@@ -1,7 +1,6 @@
-package com.lld.meeting;
+package com.lld.meetingscheduler;
 
-import com.lld.calendar.Interval;
-import com.lld.meetingroom.MeetingRoom;
+import com.lld.notification.Notification;
 import com.lld.user.User;
 
 import java.util.ArrayList;
@@ -10,21 +9,20 @@ import java.util.UUID;
 
 public class Meeting {
     public enum MeetingState {
-        COMPLETED,
         CANCELLED,
         SCHEDULED,
         ROOM_ASSIGNMENT_PENDING
     }
-    private final String id;
+    private String id;
     private String title;
-    private final User organizer;
-    private final List<User> participants;
+    private User organizer;
+    private List<User> participants;
     private int participantCount;
-    private final Interval interval;
+    private Interval interval;
     private MeetingRoom room;
     private MeetingState state;
 
-    public Meeting(String title, User organizer, Interval interval, int count) {
+    Meeting(String title, User organizer, Interval interval, int count) {
         this.id = UUID.randomUUID().toString().substring(0, 8);
         this.title = title;
         this.organizer = organizer;
@@ -38,7 +36,11 @@ public class Meeting {
         return id;
     }
 
-    public void setMeetingRoom(MeetingRoom room) throws IllegalStateException {
+    public String getTitle() {
+        return title;
+    }
+
+    void setMeetingRoom(MeetingRoom room) throws IllegalStateException {
         if (this.room != null) {
             throw new IllegalStateException("A room has already been assigned to this meeting.");
         }
@@ -49,9 +51,15 @@ public class Meeting {
         this.state = MeetingState.SCHEDULED;
     }
 
-    public void unsetMeetingRoom() {
+    void unsetMeetingRoom() {
+        boolean shouldInformParticipant = this.room != null;
         this.room = null;
         this.state = MeetingState.CANCELLED;
+        if (shouldInformParticipant) {
+            for (User participant : participants) {
+                participant.inform(new Notification("Meeting has been cancelled."));
+            }
+        }
     }
 
     public Interval getInterval() {
@@ -66,25 +74,38 @@ public class Meeting {
         return participantCount;
     }
 
-    public void addParticipant(User user) {
-        Boolean isPresent = false;
+    boolean addParticipant(User user) throws IllegalStateException {
+        if (participantCount + 1 < room.getCapacity()) {
+            throw new IllegalStateException("Meeting room is full.");
+        }
+
+        boolean isPresent = false;
         for (User u : participants) {
             if (u.getEmail().equals(user.getEmail())) {
                 isPresent = true;
                 break;
             }
         }
+
         if (!isPresent) {
             participants.add(user);
+            participantCount += 1;
+            String invitationMessage = "You've been invited to a meeting about " + this.title + " on " + this.interval.getReadableStartTime() + " in room number " + this.room.getRoomName();
+            user.inform(new Notification(invitationMessage));
         }
+        return !isPresent;
     }
 
-    public void removeParticipant(User user) {
+    boolean removeParticipant(User user) {
         for (User u : participants) {
             if (u.getEmail().equals(user.getEmail())) {
                 participants.remove(u);
-                return;
+                participantCount -= 1;
+                String removalMessage = "You've been removed from the meeting " + this.title;
+                user.inform(new Notification(removalMessage));
+                return true;
             }
         }
+        return false;
     }
 }

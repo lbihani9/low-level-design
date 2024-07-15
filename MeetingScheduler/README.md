@@ -7,7 +7,7 @@
 
 4. A notification should be sent to all the people invited to the meeting.
 
-5. Users will receive an invitation regardless of whether they are available at the interval or not. Users can respond to the invitation by either accepting or rejecting the invite.
+5. Users will receive an invitation regardless of whether they are available at the interval or not.
 
 6. Each user should have access to a calendar that is used to track the date and time, as well as to schedule or cancel meetings.
 
@@ -26,67 +26,3 @@
 3. As soon as the room is booked, the user is asked to add participant emails for invitation.
 4. After adding participant emails, system sends invites to all of them.
 5. The user can also choose to cancel the meeting, in which case cancellation notification may or may not be sent depending on whether the meeting was canceled before or after adding participants.
-6. When participants accept or reject invite, it doesn't trigger new notification.
-
-## Key objects
-1. MeetingRoom
-```
-{
-   id,
-   size,
-   calendar
-}   
-```
-2. RoomCalendar
-```
-{
-   id,
-   schedules: map[datetime]list
-}
-```
-3. Notification
-4. Interval
-```
-{
-    start,
-    end
-}
-```
-5. Meeting
-```
-{
-   id,
-   users[],
-   title,
-   organizer,
-   interval,
-   roomId
-}
-```
-6. User
-```
-{
-    id,
-    email,
-    meetingInvites: map[meetingId]InvitationState
-}
-```
-7. MeetingScheduler
-8. MeetingStates {
-      SCHEDULED,
-      CANCELLED
-   }
-9. InvitationState {
-        PENDING,
-        ACCEPTED,
-        REJECTED
-    }
-
-## Methods required
-1. scheduleMeeting()
-2. getBestRoom()
-3. acceptInvite()
-4. rejectInvite()
-5. cancelMeeting()
-6. addParticipant()
-7. notify()

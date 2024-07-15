@@ -1,8 +1,9 @@
 package com.lld.user;
 
-import com.lld.calendar.Interval;
-import com.lld.meeting.Meeting;
+import com.lld.meetingscheduler.Interval;
+import com.lld.meetingscheduler.Meeting;
 import com.lld.meetingscheduler.MeetingScheduler;
+import com.lld.notification.Notification;
 
 import java.time.Instant;
 import java.util.LinkedList;
@@ -11,6 +12,7 @@ import java.util.List;
 public class User {
     private String email;
     private List<Meeting> organizedMeetings = new LinkedList<>();
+    private List<Notification> notifications = new LinkedList<>();
 
     public User(String email) {
         this.email = email;
@@ -39,9 +41,23 @@ public class User {
         }
     }
 
-    public void addParticipant(Meeting meeting, User user) {
-        meeting.addParticipant(user);
+    public List<Notification> getNotifications() {
+        return notifications;
     }
 
-    // TODO: Implement accept and reject invite methods.
+    public void addParticipant(MeetingScheduler scheduler, Meeting meeting, User user) {
+        scheduler.addParticipant(meeting, user);
+    }
+
+    public void removeParticipant(MeetingScheduler scheduler, Meeting meeting, User user) {
+        scheduler.removeParticipant(meeting, user);
+    }
+
+    public void inform(Notification notification) {
+        notifications.add(notification);
+    }
+
+    public List<Meeting> getOrganizedMeetings() {
+        return organizedMeetings;
+    }
 }
