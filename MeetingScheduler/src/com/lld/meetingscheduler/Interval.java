@@ -5,6 +5,10 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
+/**
+ * Interval is stored in a TreeMap in `Calendar.Schedule` class. That's why this class has to implement `Comparable`
+ * interface.
+ */
 public class Interval implements Comparable<Interval> {
     private String id;
     private Instant start;

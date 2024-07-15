@@ -3,7 +3,15 @@ package com.lld.meetingscheduler;
 import com.lld.user.User;
 
 import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
+/**
+ * The core classes of Meeting scheduler system have been kept in `meetingscheduler` package because I wanted the `User`
+ *  class to interact with the scheduler system using the object of the `MeetingScheduler` only.
+ */
 public class MeetingScheduler {
     private String id;
     private TreeMap<Integer, List<MeetingRoom>> rooms;
@@ -36,20 +44,32 @@ public class MeetingScheduler {
         }
 
         Meeting meeting = new Meeting(title, organizer, interval, participantsCount);
+        Map<Integer, List<MeetingRoom>> subRooms = rooms.tailMap(participantsCount);
 
-        int minRoomSize = participantsCount;
-        while (rooms.ceilingKey(minRoomSize) != null && rooms.ceilingKey(minRoomSize) != minRoomSize) {
-            minRoomSize = rooms.ceilingKey(minRoomSize);
-            for (MeetingRoom room : rooms.get(minRoomSize)) {
+        // One by one looks for the first room where the meeting can be scheduled.
+        for (Integer key : subRooms.keySet()) {
+            List<MeetingRoom> roomList = subRooms.get(key);
+
+            if (roomList != null && !roomList.isEmpty()) {
+                ExecutorService executor = Executors.newFixedThreadPool(roomList.size());
+                List<Callable<Boolean>> tasks = new ArrayList<>();
+
+                for (MeetingRoom room : roomList) {
+                    tasks.add(() -> room.addToCalendarIfAvailable(meeting, interval));
+                }
+
                 try {
-                    Boolean ok = room.addToCalendarIfAvailable(meeting, interval);
-                    if (ok) {
-                        meeting.setMeetingRoom(room);
-                        return meeting;
+                    List<Future<Boolean>> results = executor.invokeAll(tasks);
+                    for (Future<Boolean> result : results) {
+                        if (result.get()) {
+                            executor.shutdownNow(); // Cancel remaining tasks
+                            return meeting;
+                        }
                     }
-                } catch (IllegalStateException err) {
-                    System.out.println(err.getMessage());
-                    return null;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    executor.shutdown();
                 }
             }
         }
@@ -61,7 +81,6 @@ public class MeetingScheduler {
         if (room != null) {
             this.releaseRoom(room, meeting.getInterval());
         }
-        meeting.unsetMeetingRoom();
     }
 
     public void addParticipant(Meeting meeting, User participant) {

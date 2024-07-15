@@ -40,7 +40,7 @@ public class Meeting {
         return title;
     }
 
-    void setMeetingRoom(MeetingRoom room) throws IllegalStateException {
+    synchronized void setMeetingRoom(MeetingRoom room) throws IllegalStateException {
         if (this.room != null) {
             throw new IllegalStateException("A room has already been assigned to this meeting.");
         }
@@ -51,7 +51,7 @@ public class Meeting {
         this.state = MeetingState.SCHEDULED;
     }
 
-    void unsetMeetingRoom() {
+    synchronized void unsetMeetingRoom() {
         boolean shouldInformParticipant = this.room != null;
         this.room = null;
         this.state = MeetingState.CANCELLED;
