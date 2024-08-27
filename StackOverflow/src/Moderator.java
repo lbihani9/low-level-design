@@ -1,13 +1,15 @@
-public class Moderator extends User {
-    public Moderator(Account account) {
-        super(account);
+public class Moderator extends Member {
+
+    public Moderator(String username, String name) {
+        super(username, name);
     }
 
-    public void closeQuestion(Question question) {
-        question.updateStatus(Question.QuestionStatus.CLOSED);
-    }
-
-    public void openQuestion(Question question) {
-        question.updateStatus(Question.QuestionStatus.OPEN);
+    public void closeQuestion(String questionId) {
+        QuestionManager questionMgr = QuestionManager.getInstance();
+        Question question = questionMgr.getQuestionById(questionId);
+        if (question == null) {
+            throw new IllegalStateException("Question not found");
+        }
+        question.close();
     }
 }

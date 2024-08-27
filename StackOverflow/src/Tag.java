@@ -3,23 +3,22 @@ import java.util.ArrayList;
 public class Tag {
     private String name;
     private String description;
-    private ArrayList<Question> questions;
+    private ArrayList<String> questionIds;
 
-    Tag(String name, String description) {
+    public Tag(String name) {
+        this.name = name;
+    }
+
+    public Tag(String name, String description) {
         this.name = name;
         this.description = description;
     }
 
-    public ArrayList<Question> getQuestions() {
-        return questions;
+    public void updateDescription(String description) {
+        this.description = description;
     }
 
-    public void addQuestion(Question question) {
-        questions.add(question);
-    }
-
-    @Override
-    public String toString() {
-        return "Tag [name=" + name + ", description=" + description + "]";
+    public ArrayList<String> getQuestionIds() {
+        return questionIds;
     }
 }

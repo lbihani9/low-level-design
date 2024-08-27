@@ -2,8 +2,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class TagManager {
-    private static TagManager instance;
     private Map<String, Tag> tags;
+    private static TagManager instance;
 
     private TagManager() {
         tags = new HashMap<>();
@@ -12,7 +12,7 @@ public class TagManager {
     public static TagManager getInstance() {
         if (instance == null) {
             synchronized (TagManager.class) {
-                if (instance == null) {
+                if(instance == null) {
                     instance = new TagManager();
                 }
             }
@@ -24,9 +24,10 @@ public class TagManager {
         return tags.get(name);
     }
 
-    public void createTagIfDoesntExist(String name, String description) {
-        if (!tags.containsKey(name)) {
-            tags.put(name, new Tag(name, description));
+    public Tag createTagIfAbsent(String tagName) {
+        if (!tags.containsKey(tagName)) {
+            tags.put(tagName, new Tag(tagName));
         }
+        return tags.get(tagName);
     }
 }

@@ -12,7 +12,7 @@ public class AccountManager {
     public static AccountManager getInstance() {
         if (instance == null) {
             synchronized (AccountManager.class) {
-                if (instance == null) {
+                if(instance == null) {
                     instance = new AccountManager();
                 }
             }
@@ -20,13 +20,11 @@ public class AccountManager {
         return instance;
     }
 
-    public void addAccount(Account account) {
-        accounts.put(account.getId(), account);
+    public void addAccount(String username, Account account) {
+        accounts.put(username, account);
     }
 
-    public Account getAccountByUsername(String username) {
-        for (Account account : accounts.values()) {
-
-        }
+    public Account getByUsername(String username) {
+        return accounts.get(username);
     }
 }
