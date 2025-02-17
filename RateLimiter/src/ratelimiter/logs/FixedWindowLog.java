@@ -1,20 +1,23 @@
-package ratelimiter.log;
+package ratelimiter.logs;
+
+import ratelimiter.settings.Settings;
+
+import java.time.Instant;
 
 public class FixedWindowLog implements Log {
     public long expiresAt;
     public long consumedSoFar;
+
+    public FixedWindowLog(Settings settings) {
+        this(Instant.now().plus(settings.getTicks(), settings.getTimeUnit().toChronoUnit()).toEpochMilli());
+    }
 
     public FixedWindowLog(long expiresAt) {
         this.consumedSoFar = 1;
         this.expiresAt = expiresAt;
     }
 
-    public void reset(long expiresAt) {
-        this.consumedSoFar = 1;
-        this.expiresAt = expiresAt;
-    }
-
-    public void consumeOneMore() {
+    public void consume() {
         consumedSoFar++;
     }
 

@@ -1,4 +1,4 @@
-package ratelimiter.log;
+package ratelimiter.logs;
 
 public interface Log {
 }

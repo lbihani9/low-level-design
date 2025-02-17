@@ -1,40 +1,45 @@
 package ratelimiter.algorithms;
 
-import ratelimiter.log.FixedWindowLog;
-import ratelimiter.log.Log;
+import ratelimiter.logs.FixedWindowLog;
+import ratelimiter.logs.Log;
+import ratelimiter.settings.Settings;
 
 import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 public class FixedWindow implements RateLimitingStrategy {
-    public ConcurrentHashMap<String, Log> requestLogs;
-    private final TimeUnit timeUnit;
-    public final long limitPerTimeUnit;
+    private final ConcurrentHashMap<String, Log> requestLogs;
+    private final Settings settings;
 
-    public FixedWindow(TimeUnit timeUnit, long limitPerTimeUnit) {
+    public FixedWindow(Settings settings) {
         this.requestLogs = new ConcurrentHashMap<>();
-        this.timeUnit = timeUnit;
-        this.limitPerTimeUnit = limitPerTimeUnit;
+        this.settings = settings;
     }
 
     @Override
     public boolean shouldRateLimit(String userId) {
-        FixedWindowLog logEntry = (FixedWindowLog) requestLogs.compute(userId, (key, value) -> {
+        FixedWindowLog logEntry = (FixedWindowLog) requestLogs.compute(userId, (_, value) -> {
             if (value == null) {
-                return new FixedWindowLog(Instant.now().plus(limitPerTimeUnit, timeUnit.toChronoUnit()).toEpochMilli());
+                return new FixedWindowLog(settings);
             }
 
             FixedWindowLog log = (FixedWindowLog) value;
-            if (log.expiresAt >= Instant.now().toEpochMilli()) {
-                if (log.consumedSoFar <= limitPerTimeUnit) {
-                    log.consumeOneMore();
-                }
-            } else {
-                log.reset(Instant.now().plus(limitPerTimeUnit, timeUnit.toChronoUnit()).toEpochMilli());
+            if (log.expiresAt < Instant.now().toEpochMilli()) {
+                return new FixedWindowLog(settings);
             }
-            return value;
+
+            if (log.consumedSoFar <= settings.getRequestLimit()) {
+                log.consume();
+            }
+
+            return log;
         });
-        return logEntry.consumedSoFar > limitPerTimeUnit;
+
+//        System.out.println(logEntry);
+        return logEntry.consumedSoFar > settings.getRequestLimit();
+    }
+
+    public Settings getSettings() {
+        return settings;
     }
 }
